@@ -1,0 +1,28 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Deploy to Server
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        SERVER_USER: ubuntu
+        SERVER_IP: 54.205.234.252
+        SERVER_PORT: 22
+      run: |
+        mkdir -p ~/.ssh
+        echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -t rsa $SERVER_IP >> ~/.ssh/known_hosts
+        rsync -az --delete ./ ubuntu@$SERVER_IP:/home
+        ssh -i ~/.ssh/id_rsa -p $SERVER_PORT ubuntu@$SERVER_IP
